@@ -5,31 +5,25 @@ import psycopg2, os
 app = Flask(__name__)
 CORS(app)
 
-DATABASE_URL = os getenv(
-  "DATABASE_URL",
-  "postgresql://porza:C8gpGxYMVrbkPtvAY0aA3V1MQwTu68ck@dpg-d6t8qqdm5p6s73b7u9dg-a.oregon-postgres.render.com/hello_cloud_2_4p3d"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://porza:C8gpGxYMVrbkPtvAY0aA3V1MQwTu68ck@dpg-d6t8qqdm5p6s73b7u9dg-a.oregon-postgres.render.com/hello_cloud_2_4p3d"
 )
 
-def connect_db()
-  return psycopg2.connect(DATABASE_URL)
+def connect_db():
+    return psycopg2.connect(DATABASE_URL)
 
-@app.route("/ziyaretçiler",methods=["GET","POST"])
+@app.route("/ziyaretçiler", methods=["GET", "POST"])
 def ziyaretciler():
-  conn = connect_db()
-  cur = conn.cursor()
-  cur.execute("CREATE TABLE IF NOT EXISTS ziyaretciler (id SERIAŞ PRIMARY KEY, isim TEXT)")
+    conn = connect_db()
+    cur = conn.cursor()
+    
+    # SERIAŞ yerine SERIAL düzeltildi
+    cur.execute("CREATE TABLE IF NOT EXISTS ziyaretciler (id SERIAL PRIMARY KEY, isim TEXT)")
 
-if request.method == "POST":
-  isim = request.json.get("isim")
-  if isim:
-     cur.execute("INSERT INTO ziyaretciler (isim) VALUES (%S)", (isim))
-    conn.commmit()
-cur.execute("SELECT isim FROM ziyaretciler ORDER BY id DESC LIMIT 10")
-isimler = [row[0] for row in cur.fetchall()]
-
-cur.close()
-conn.close()
-
-return jsonify(isimler)
-if __name__ 0= "__main__":
-app.run(host="0.0.0.0", port = 5001)
+    if request.method == "POST":
+        isim = request.json.get("isim")
+        if isim:
+            # Büyük S küçük s yapıldı ve (isim,) şeklinde tuple'a çevrildi
+            cur.execute("INSERT INTO ziyaretciler (isim) VALUES (%s)", (isim,))
+            # commmit()
