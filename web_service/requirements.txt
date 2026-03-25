@@ -1,4 +1,3 @@
-flask
+lask
 requests
 gunicorn
-python-dotenv
