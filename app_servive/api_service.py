@@ -1,30 +1,40 @@
-api_service.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2, os
+
 app = Flask(__name__)
 CORS(app)
+
 DATABASE_URL = os.getenv(
- "DATABASE_URL",
- "postgresql://porza:C8gpGxYMVrbkPtvAY0aA3V1MQwTu68ck@dpg-d6t8qqdm5p6s73b7u9dg-a.oregon-postgres.render.com/hello_cloud_2_4p3d"
+    "DATABASE_URL",
+    "postgresql://porza:C8gpGxYMVrbkPtvAY0aA3V1MQwTu68ck@dpg-d6t8qqdm5p6s73b7u9dg-a.oregon-postgres.render.com/hello_cloud_2_4p3d"
 )
+
 def connect_db():
- return psycopg2.connect(DATABASE_URL)
+    return psycopg2.connect(DATABASE_URL)
+
+# Tablo uygulama başlarken bir kez oluşturuluyor
+with connect_db() as conn:
+    with conn.cursor() as cur:
+        cur.execute("CREATE TABLE IF NOT EXISTS ziyaretciler (id SERIAL PRIMARY KEY, isim TEXT)")
+    conn.commit()
+
 @app.route("/ziyaretciler", methods=["GET", "POST"])
 def ziyaretciler():
- conn = connect_db()
- cur = conn.cursor()
- cur.execute("CREATE TABLE IF NOT EXISTS ziyaretciler (id SERIAL PRIMARY KEY, isim
-TEXT)")
- if request.method == "POST":
- isim = request.json.get("isim")
- if isim:
- cur.execute("INSERT INTO ziyaretciler (isim) VALUES (%s)", (isim,))
- conn.commit()
- cur.execute("SELECT isim FROM ziyaretciler ORDER BY id DESC LIMIT 10")
- isimler = [row[0] for row in cur.fetchall()]
- cur.close()
- conn.close()
- return jsonify(isimler)
+    conn = connect_db()
+    try:
+        cur = conn.cursor()
+        if request.method == "POST":
+            isim = request.json.get("isim")
+            if isim:
+                cur.execute("INSERT INTO ziyaretciler (isim) VALUES (%s)", (isim,))
+                conn.commit()
+        cur.execute("SELECT isim FROM ziyaretciler ORDER BY id DESC LIMIT 10")
+        isimler = [row[0] for row in cur.fetchall()]
+        return jsonify(isimler)
+    finally:
+        cur.close()
+        conn.close()
+
 if __name__ == "__main__":
- app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5001)
